@@ -6,7 +6,9 @@
       <script value="dev" />
     </scripts>
     <node-interpreter value="project" />
-    <envs />
+    <envs>
+      <env name="REACT_APP_GOOGLE_MAP_API_KEY" value="AIzaSyDiaQWlgpAEVBkCiwluNme9IfKY4ElgYco" />
+    </envs>
     <method v="2" />
   </configuration>
 </component>
