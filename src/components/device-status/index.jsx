@@ -4,12 +4,19 @@ import MarkerClusterGroup from 'react-leaflet-cluster'
 import {MapContainer, Marker, TileLayer} from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
-const FIRE_DETECTED_FILTER = "fire_detected";
 const initialFilters = {};
+const FIRE_DETECTED_FILTER = "fire_detected";
 initialFilters[FIRE_DETECTED_FILTER] = {
     enabled: false,
     filterFunc: (device) => {
         return device?.status_code === "Fire";
+    }
+};
+const NOT_DISABLED_FILTER = "NOT_DISABLED";
+initialFilters[NOT_DISABLED_FILTER] = {
+    enabled: true,
+    filterFunc: (device) => {
+        return device?.disabled === false;
     }
 };
 
@@ -18,7 +25,7 @@ function DeviceStatus() {
     const [message, setMessage] = React.useState(undefined);
     const [filters, setFilters] = React.useState(initialFilters);
 
-    React.useEffect(() => {
+    const refreshData = () => {
         getAllDevices()
             .catch(err => {
                 console.error(err);
@@ -28,15 +35,31 @@ function DeviceStatus() {
             .then((response) => {
                 response.json().then((data) => {
                     console.info("Fetched all devices", data);
-                    setDevices(data?.devices);
+                    let devices = [];
+                    if (data?.devices) {
+                        for (const entry of Object.entries(data.devices)) {
+                            const device = entry[1];
+                            let passFilters = true;
+                            for (const entry of Object.entries(filters)) {
+                                const filter = entry[1];
+                                if (filter.enabled && !filter.filterFunc(device)) {
+                                    passFilters = false;
+                                }
+                            }
+                            if (passFilters) {
+                                devices.push(device);
+                            }
+                        }
+                    }
+                    setDevices(devices);
                     setMessage(data?.message);
                 }).catch((err) => {
                     console.error(err);
                     setMessage(err.toString());
                     setDevices({});
                 });
-            })
-    }, []);
+            });
+    }
 
     const filterHandler = (evt) => {
         let checked = evt.target.checked;
@@ -44,7 +67,13 @@ function DeviceStatus() {
         filters[name]['enabled'] = checked;
         const filtersCopy = {...filters};
         setFilters(filtersCopy);
+        setDevices(undefined);
+        refreshData();
     }
+
+    React.useEffect(() => {
+        refreshData();
+    }, []);
 
     return (
         <div style={{display: "flex", flex: 1}}>
@@ -55,14 +84,11 @@ function DeviceStatus() {
             }
             {
                 <div style={{display: "flex", flexDirection: "column", flex: 1}}>
-                    {
-                        devices && (
-                            <div>
-                                <h2>Filters</h2>
-                                <label><input type="checkbox" name={FIRE_DETECTED_FILTER} value="value" onClick={filterHandler}/>Fire Detected</label>
-                            </div>
-                        )
-                    }
+                    <div>
+                        <h2>Filters</h2>
+                        <label><input type="checkbox" name={FIRE_DETECTED_FILTER} value="value" onClick={filterHandler}
+                                      checked={filters[FIRE_DETECTED_FILTER].enabled}/>Fire Detected</label>
+                    </div>
                     {
                         !devices && (
                             <div
@@ -100,12 +126,6 @@ function DeviceStatus() {
                             {
                                 devices && Object.entries(devices).map((entry) => {
                                     const device = entry[1];
-                                    for (const entry of Object.entries(filters)) {
-                                        const filter = entry[1];
-                                        if (filter.enabled && !filter.filterFunc(device)) {
-                                            return;
-                                        }
-                                    }
                                     return (
                                         <Marker
                                             key={device.id}
