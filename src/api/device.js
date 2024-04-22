@@ -1,6 +1,7 @@
-const API_HOST = import.meta.env.MODE === 'production' ? "https://device-status-server-b73fe300040d.herokuapp.com" : "http://localhost:8081";
-console.log("Meta ENV MODE", import.meta.env.MODE);
-console.log("Using API_HOST", API_HOST);
+// const API_HOST = import.meta.env.MODE === 'production' ? "https://device-status-server-b73fe300040d.herokuapp.com" : "http://localhost:8081";
+// console.log("Meta ENV MODE", import.meta.env.MODE);
+// console.log("Using API_HOST", API_HOST);
+const API_HOST = "https://device-status-server-b73fe300040d.herokuapp.com";
 
 /**
  * Get all devices
