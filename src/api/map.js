@@ -5,4 +5,4 @@ function throwError(message) {
 }
 
 // eslint-disable-next-line no-undef
-export const GOOGLE_MAP_API_KEY = process.env.REACT_APP_GOOGLE_MAP_API_KEY || throwError("REACT_APP_GOOGLE_MAP_API_KEY not defined");
+export const GOOGLE_MAP_API_KEY = "AIzaSyDiaQWlgpAEVBkCiwluNme9IfKY4ElgYco" || throwError("REACT_APP_GOOGLE_MAP_API_KEY not defined");
