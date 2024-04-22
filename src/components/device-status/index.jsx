@@ -24,6 +24,7 @@ function DeviceStatus() {
     const [devices, setDevices] = React.useState(undefined);
     const [message, setMessage] = React.useState(undefined);
     const [filters, setFilters] = React.useState(initialFilters);
+    const [center, setCenter] = React.useState(undefined);
 
     const refreshData = () => {
         getAllDevices()
@@ -71,8 +72,26 @@ function DeviceStatus() {
         refreshData();
     }
 
+    const goToCenter = () => {
+        navigator.geolocation.getCurrentPosition((position) => {
+            let lat = position.coords.latitude;
+            let long = position.coords.longitude;
+            const newCenter = [lat, long];
+            console.debug("User position is ", newCenter);
+            setCenter([...newCenter]);
+        }, () => {
+            setCenter([...[38.44, -122.71]]);
+        }, {
+            timeout: 10000
+        });
+    }
+
     React.useEffect(() => {
         refreshData();
+    }, []);
+
+    React.useEffect(() => {
+        goToCenter();
     }, []);
 
     return (
@@ -84,14 +103,13 @@ function DeviceStatus() {
             }
             {
                 <div style={{display: "flex", flexDirection: "column", flex: 1}}>
-                    <div>
+                    <div style={{visibility: (!center) ? "hidden" : "visible"}}>
                         <h2>Horizon Force</h2>
                         <p>Filters</p>
-                        <label><input type="checkbox" name={FIRE_DETECTED_FILTER} value="value" onClick={filterHandler}
-                                      checked={filters[FIRE_DETECTED_FILTER].enabled}/>Fire Detected</label>
+                        <label><input type="checkbox" name={FIRE_DETECTED_FILTER} value="value" onClick={filterHandler}/>Fire Detected</label>
                     </div>
                     {
-                        !devices && (
+                        (!devices || !center) && (
                             <div
                                 style={{
                                     position: 'absolute',
@@ -110,48 +128,51 @@ function DeviceStatus() {
                             </div>
                         )
                     }
-                    <MapContainer
-                        style={{height: '100%', width: '100%'}}
-                        center={[38.44, -122.71]}
-                        zoom={6}
-                        scrollWheelZoom={true}
-                        maxZoom={10}
-                    >
-                        <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-                        <MarkerClusterGroup
-                            chunkedLoading
-                        >
-                            {
-                                devices && Object.entries(devices).map((entry) => {
-                                    const device = entry[1];
-                                    return (
-                                        <Marker
-                                            key={device.id}
-                                            position={[device.lat, device.lng]}
-                                            title={device.name}
-                                            eventHandlers={{
-                                                click: () => {
-                                                    getDevice(device.id).then((response) => {
-                                                        response.json().then(device => {
-                                                            alert(JSON.stringify(device?.device));
-                                                        }).catch((e) => {
-                                                            console.error("Error parsing device response to JSON", response, e);
-                                                        });
-                                                    }).catch((e) => {
-                                                        console.error("Error getting device", device, e);
-                                                    })
-                                                },
-                                            }}
-                                        ></Marker>
-                                    );
-                                })
-                            }
-
-                        </MarkerClusterGroup>
-                    </MapContainer>
+                    {
+                        center && (
+                            <MapContainer
+                                style={{height: '100%', width: '100%'}}
+                                center={center}
+                                zoom={6}
+                                scrollWheelZoom={true}
+                                maxZoom={10}
+                            >
+                                <TileLayer
+                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                />
+                                <MarkerClusterGroup
+                                    chunkedLoading
+                                >
+                                    {
+                                        devices && Object.entries(devices).map((entry) => {
+                                            const device = entry[1];
+                                            return (
+                                                <Marker
+                                                    key={device.id}
+                                                    position={[device.lat, device.lng]}
+                                                    title={device.name}
+                                                    eventHandlers={{
+                                                        click: () => {
+                                                            getDevice(device.id).then((response) => {
+                                                                response.json().then(device => {
+                                                                    alert(JSON.stringify(device?.device));
+                                                                }).catch((e) => {
+                                                                    console.error("Error parsing device response to JSON", response, e);
+                                                                });
+                                                            }).catch((e) => {
+                                                                console.error("Error getting device", device, e);
+                                                            })
+                                                        },
+                                                    }}
+                                                ></Marker>
+                                            );
+                                        })
+                                    }
+                                </MarkerClusterGroup>
+                            </MapContainer>
+                        )
+                    }
                 </div>
             }
 
