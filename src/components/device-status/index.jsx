@@ -1,5 +1,5 @@
 import React from 'react'
-import { getAllDevices } from "../../api/device.js";
+import {getAllDevices, getDevice} from "../../api/device.js";
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import {MapContainer, Marker, TileLayer} from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -85,7 +85,8 @@ function DeviceStatus() {
             {
                 <div style={{display: "flex", flexDirection: "column", flex: 1}}>
                     <div>
-                        <h2>Filters</h2>
+                        <h2>Horizon Force</h2>
+                        <p>Filters</p>
                         <label><input type="checkbox" name={FIRE_DETECTED_FILTER} value="value" onClick={filterHandler}
                                       checked={filters[FIRE_DETECTED_FILTER].enabled}/>Fire Detected</label>
                     </div>
@@ -131,6 +132,19 @@ function DeviceStatus() {
                                             key={device.id}
                                             position={[device.lat, device.lng]}
                                             title={device.name}
+                                            eventHandlers={{
+                                                click: () => {
+                                                    getDevice(device.id).then((response) => {
+                                                        response.json().then(device => {
+                                                            alert(JSON.stringify(device?.device));
+                                                        }).catch((e) => {
+                                                            console.error("Error parsing device response to JSON", response, e);
+                                                        });
+                                                    }).catch((e) => {
+                                                        console.error("Error getting device", device, e);
+                                                    })
+                                                },
+                                            }}
                                         ></Marker>
                                     );
                                 })

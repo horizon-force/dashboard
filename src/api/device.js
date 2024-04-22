@@ -12,3 +12,12 @@ export async function getAllDevices() {
 
     return fetch(`${API_HOST}/api/v0/device`, requestOptions);
 }
+
+export async function getDevice(id) {
+    const requestOptions = {
+        method: "GET",
+        redirect: "follow"
+    };
+
+    return fetch(`${API_HOST}/api/v0/device/${id}`, requestOptions);
+}
