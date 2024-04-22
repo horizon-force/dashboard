@@ -1,31 +1,13 @@
 import React from 'react'
 import { getAllDevices } from "../../api/device.js";
-import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
-import {GOOGLE_MAP_API_KEY} from "../../api/map.js";
+import MarkerClusterGroup from 'react-leaflet-cluster'
+import {MapContainer, Marker, TileLayer} from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
 
 function DeviceStatus() {
-    const [center, ] = React.useState({
-        lat: 38.439700,
-        lng: -122.715640
-    });
     const [devices, setDevices] = React.useState(undefined);
     const [message, setMessage] = React.useState(undefined);
 
-    const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: GOOGLE_MAP_API_KEY
-    })
-
-    // eslint-disable-next-line no-unused-vars
-    const [_map, setMap] = React.useState(null)
-
-    const onLoad = React.useCallback(function callback(map) {
-        setMap(map)
-    }, [])
-
-    const onUnmount = React.useCallback(function callback(_) {
-        setMap(null)
-    }, [])
 
     React.useEffect(() => {
         getAllDevices()
@@ -55,21 +37,34 @@ function DeviceStatus() {
                 )
             }
             {
-                (devices && isLoaded) ? (
+                (devices) ? (
                     <div style={{display: "flex", flex: 1}}>
-                        <GoogleMap
-                            mapContainerStyle={{
-                                width: '100%',
-                                height: `800px`
-                            }}
-                            center={center}
-                            zoom={7}
-                            onLoad={onLoad}
-                            onUnmount={onUnmount}
+                        <MapContainer
+                            style={{height: '100%', width: '100%'}}
+                            center={[38.44, -122.71]}
+                            zoom={6}
+                            scrollWheelZoom={true}
+                            maxZoom={10}
                         >
-                            { /* Child components, such as markers, info windows, etc. */ }
-                            <></>
-                        </GoogleMap>
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                            <MarkerClusterGroup
+                                chunkedLoading
+                            >
+                                {Object.entries(devices).map((entry) => {
+                                    const device = entry[1];
+                                    return (
+                                        <Marker
+                                            key={device.id}
+                                            position={[device.lat, device.lng]}
+                                            title={device.name}
+                                        ></Marker>
+                                    );
+                                })}
+                            </MarkerClusterGroup>
+                        </MapContainer>
                     </div>
                 ) : (
                     <div>
